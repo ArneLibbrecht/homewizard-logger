@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  nodeapp:
+    build: .
+    container_name: nodeapp
+    restart: always
+    depends_on:
+      - influxdb
+    environment:
+      - NODE_ENV=production
+      - INFLUX_TOKEN=${INFLUX_TOKEN}
+      - INFLUX_ORG=${INFLUX_ORG}
+      - INFLUX_BUCKET=${INFLUX_BUCKET}
+      - INFLUX_URL=${INFLUX_URL}
+    networks:
+      - energy-net
+
+  influxdb:
+    image: influxdb:2.0
+    container_name: influxdb
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    environment:
+      - INFLUXDB_DB=energy_data
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=adminpassword
+      - INFLUXDB_HTTP_AUTH_ENABLED=true
+    ports:
+      - "8086:8086"
+    networks:
+      - energy-net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    depends_on:
+      - influxdb
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=adminpassword
+    networks:
+      - energy-net
+
+volumes:
+  influxdb-data:
+  grafana-data:
+
+networks:
+  energy-net:
